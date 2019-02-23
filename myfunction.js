@@ -259,7 +259,7 @@ function jsonp(obj) {
 //深拷贝
 // 方法一：JSON.parse(JSON.stringify(obj))
 function deepClone(obj) {
-  if (typeof obj !== 'object') {
+  if (obj === null || typeof obj !== 'object') {
     return obj;
   }
   var newobj = obj.push ? [] : {};
