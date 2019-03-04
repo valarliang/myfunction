@@ -135,23 +135,6 @@ function add2(x, y) {
   return x.toPrecision() + y.toPrecision()  //或toFixed(),返回都为字符串
 }
 
-/*function setcookie(key,value,date) {
-  var oDate=new Date();
-  oDate.setDate(oDate.getDate()+date);
-  document.cookie=key+'='+value+';expires='+oDate.toGMTString();
-}
-function getcookie(key) {
-  var arr1=document.cookie.split('; ');
-  for (var i = 0; i < arr1.length; i++) {
-    var arr2=arr1[i].split('=');
-    if (arr2[0]==key) {
-      return decodeURI(arr2[1]);
-    }
-  }
-}
-function removecookie(key) {
-  setcookie(key,'',-1);
-}*/
 function setcookie(name, value, expires, path, domain, secure) {
   var cookie = encodeURIComponent(name) + '=' + encodeURIComponent(value);
   if (expires) cookie += '; expires=' + expires.toGMTString();
