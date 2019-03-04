@@ -294,3 +294,17 @@ const throttle = (func, wait = 50) => {
     }
   }
 }
+
+// 插入排序
+function insertSort(arr) {
+  const len = arr.length;
+  for (let i = 1; i < len; i++) {
+    const num = arr[i];
+    for (let j = i - 1; j > -1; j--) {
+      if (arr[j] > num) arr[j + 1] = arr[j];
+      else break;
+    }
+    arr[j + 1] = num;
+  }
+  return arr;
+}
