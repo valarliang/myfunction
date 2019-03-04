@@ -10,8 +10,7 @@ var re = {
 }
 
 function type(o) {
-  let s = Object.prototype.toString.call(o);
-  return s.slice(8, -1).toLowerCase();
+  return Object.prototype.toString.call(o).slice(8, -1).toLowerCase();
 }
 
 function generateId() {
@@ -287,5 +286,28 @@ class SubscribeEvent {
   }
   unSubscribe(type, cb) {
     this.listeners[type] = this.listeners[type].filter(e => e.name !== cb.name)//利用Function的name属性
+  }
+}
+
+// 防抖
+const debounce = (func, wait = 100) => {
+  let timer = 0
+  return function(...args) { // arguments
+    if (timer) clearTimeout(timer) // func触发频率小于100ms会被取消再新建
+    timer = setTimeout(() => {
+      func.apply(this, args)
+    }, wait)
+  }
+}
+
+// 节流
+const throttle = (func, wait = 50) => {
+  let lastTime = 0
+  return function(...args) {
+    let now = +new Date()
+    if (now - lastTime > wait) {
+      lastTime = now
+      func.apply(this, args)
+    }
   }
 }
