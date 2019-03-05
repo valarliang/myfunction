@@ -271,7 +271,7 @@ function deepClone(obj) {
 
 
 
-//-------ES6 自定义事件
+//-------ES6 自定义事件方法
 class SubscribeEvent {
   constructor() {
     this.listeners = {}
@@ -288,4 +288,17 @@ class SubscribeEvent {
   unSubscribe(type, cb) {
     this.listeners[type] = this.listeners[type].filter(e => e.name !== cb.name)//利用Function的name属性
   }
+}
+
+//call的实现
+Function.prototype.myCall = function(context) {
+  if (typeof this !== 'function') {
+    throw new TypeError('Error')
+  }
+  context = context || window
+  context.fn = this
+  const args = [...arguments].slice(1)
+  const result = context.fn(...args)
+  delete context.fn
+  return result
 }
