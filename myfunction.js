@@ -10,8 +10,7 @@ var re = {
 }
 
 function type(o) {
-  let s = Object.prototype.toString.call(o);
-  return s.slice(8, -1).toLowerCase();
+  return Object.prototype.toString.call(o).slice(8, -1).toLowerCase();
 }
 
 function generateId() {
@@ -136,23 +135,6 @@ function add2(x, y) {
   return x.toPrecision() + y.toPrecision()  //或toFixed(),返回都为字符串
 }
 
-/*function setcookie(key,value,date) {
-  var oDate=new Date();
-  oDate.setDate(oDate.getDate()+date);
-  document.cookie=key+'='+value+';expires='+oDate.toGMTString();
-}
-function getcookie(key) {
-  var arr1=document.cookie.split('; ');
-  for (var i = 0; i < arr1.length; i++) {
-    var arr2=arr1[i].split('=');
-    if (arr2[0]==key) {
-      return decodeURI(arr2[1]);
-    }
-  }
-}
-function removecookie(key) {
-  setcookie(key,'',-1);
-}*/
 function setcookie(name, value, expires, path, domain, secure) {
   var cookie = encodeURIComponent(name) + '=' + encodeURIComponent(value);
   if (expires) cookie += '; expires=' + expires.toGMTString();
@@ -293,12 +275,81 @@ class SubscribeEvent {
 //call的实现
 Function.prototype.myCall = function(context) {
   if (typeof this !== 'function') {
-    throw new TypeError('Error')
+    throw new TypeError('Error');
   }
-  context = context || window
-  context.fn = this
-  const args = [...arguments].slice(1)
-  const result = context.fn(...args)
-  delete context.fn
-  return result
+  context = context || window;
+  context.fn = this;
+  const args = [...arguments].slice(1);
+  const result = context.fn(...args);
+  delete context.fn;
+  return result;
+}
+
+// 防抖
+const debounce = (func, wait = 100) => {
+  let timer = 0
+  return function(...args) { // arguments
+    if (timer) clearTimeout(timer) // func触发频率小于100ms会被取消再新建
+    timer = setTimeout(() => {
+      func.apply(this, args)
+    }, wait)
+  }
+}
+
+// 节流
+const throttle = (func, wait = 50) => {
+  let lastTime = 0
+  return function(...args) {
+    let now = +new Date()
+    if (now - lastTime > wait) {
+      lastTime = now
+      func.apply(this, args)
+    }
+  }
+}
+
+function bubleSort(arr) {
+  let len = arr.length;
+  for (let i = 0; i < len; i++) {
+    for (let j = 0; j < len - i - 1; j++) {
+      if (arr[j] > arr[j+1]) [arr[j], arr[j+1]] = [arr[j+1], arr[j]];
+    }
+  }
+  return arr;
+}
+
+function selectSort(arr) {
+  let len = arr.length;
+  for (let i = 0; i < len; i++) {
+    let min = i;
+    for (let j = i + 1; j < len; j++) {
+      if (arr[j] < arr[min]) min = j;
+    }
+    if (min !== i) [arr[i], arr[min]] = [arr[min], arr[i]];
+  }
+  return arr;
+}
+
+function insertSort(arr) {
+  const len = arr.length;
+  for (let i = 1; i < len; i++) {
+    const num = arr[i];
+    for (let j = i - 1; j > -1; j--) {
+      if (arr[j] > num) arr[j + 1] = arr[j];
+      else break;
+    }
+    arr[j + 1] = num;
+  }
+  return arr;
+}
+
+function quickSort(arr) {
+  if(arr.length <= 1) return arr;
+  var pivot = arr.splice(0,1)[0];
+  var left = [];
+  var right = [];
+  for (var i = 0; i < arr.length; i++) {
+    arr[i] < pivot ? left.push(arr[i]):right.push(arr[i])
+  }
+  return quickSort(left).concat([pivot],quickSort(right));
 }
