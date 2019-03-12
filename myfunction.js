@@ -307,7 +307,7 @@ const throttle = (func, wait = 50) => {
     }
   }
 }
-// 优点：稳定、可对链表
+// 优点：稳定、用于链表
 function bubbleSort(arr) {
   let len = arr.length;
   for (let i = len - 1; i >= 0; i--) {
@@ -319,6 +319,30 @@ function bubbleSort(arr) {
       }
     }
     if (!flag) break;
+  }
+  return arr;
+}
+// 优点： 稳定
+function insertSort(arr) {
+  const len = arr.length;
+  for (let i = 1; i < len; i++) {
+    const num = arr[i];
+    for (var j = i; j > 0 && arr[j-1] > num; j--) arr[j] = arr[j-1];
+    arr[j] = num;
+  }
+  return arr;
+}
+// 希尔排序：插入排序的优化，但不稳定
+function shellSort(arr) {
+  const len = arr.length;
+  const Sedgewick = [929, 505, 209, 109, 41, 19, 5, 1, 0]; // Sedgewick一部分增量序列，另一种增量序列：Hibbard增量序列
+  for (var d = 0; Sedgewick[d] >= len; d++);
+  for (let i = Sedgewick[d]; i > 0; i = Sedgewick[++d]) {
+    for (let j = i; j < len; j++) {
+      const num = arr[j];
+      for (var k = j; k > 0 && arr[k-i] > num; k-=i) arr[k] = arr[k-i];
+      arr[k] = num;
+    }
   }
   return arr;
 }
@@ -335,26 +359,13 @@ function selectSort(arr) {
   return arr;
 }
 
-function insertSort(arr) {
-  const len = arr.length;
-  for (let i = 1; i < len; i++) {
-    const num = arr[i];
-    for (let j = i - 1; j > -1; j--) {
-      if (arr[j] > num) arr[j + 1] = arr[j];
-      else break;
-    }
-    arr[j + 1] = num;
-  }
-  return arr;
-}
-
 function quickSort(arr) {
   if(arr.length <= 1) return arr;
-  var pivot = arr.splice(0,1)[0];
-  var left = [];
-  var right = [];
-  for (var i = 0; i < arr.length; i++) {
-    arr[i] < pivot ? left.push(arr[i]):right.push(arr[i])
+  let pivot = arr.splice(0,1)[0];
+  let left = [];
+  let right = [];
+  for (let i = 0; i < arr.length; i++) {
+    arr[i] < pivot ? left.push(arr[i]) : right.push(arr[i])
   }
   return quickSort(left).concat([pivot],quickSort(right));
 }
