@@ -296,7 +296,7 @@ const debounce = (func, wait = 100) => {
   }
 }
 
-// 节流
+// 节流(throttle)
 const throttle = (func, wait = 50) => {
   let lastTime = 0
   return function(...args) {

@@ -1,4 +1,4 @@
-// In Redux package
+// -----------------------------In Redux package--------------------------------------------------
 // Implementing store
 function createStore(reducer) {
   let state;
@@ -25,8 +25,15 @@ const combineReducers = (reducers) => {
     }, {});
   }
 }
+// Implementing redux-thunk
+const thunk = (store) => (next) => (action) =>
+typeof action === 'function' ? action(next, store.getState) : next(action);
+// Implementing applymiddleware
+function applyMiddleware(store, middlewares = [thunk]) {
+  middlewares.slice().forEach((middleware) => store.dispatch = middleware(store)(store.dispatch));
+}
 
-// In react-redux package
+// --------------------------------------------------In react-redux package------------------------------------
 // Implementing Provider & connect with React:
 const Context = React.createContext();
 function connect (mapStateToProps) {
@@ -67,3 +74,9 @@ class Provider extends React.Component {
     )
   }
 }
+ReactDOM.render(
+  <Provider store={store}>
+    <ConnectedApp />
+  </Provider>,
+  document.getElementById('app')
+);
