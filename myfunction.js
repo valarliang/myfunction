@@ -8,46 +8,22 @@ var re = {
   postalcode: /[0-9]\d{5}/,    //邮编
   ID: /[1-9]\d{14}|[1-9]\d{17}|[1-9]\d{16}x/  //身份证号
 }
+// 加千分位 "12345678".replace(/(\d)(?=(?:\d{3})+$)/g,'$1,')
 
 function type(o) {
   return Object.prototype.toString.call(o).slice(8, -1).toLowerCase();
+}
+// 数组扁平化
+function flat (arr) {
+  return [].concat(...arr.map(item => (Array.isArray(item) ? flat(arr) : [item])));
 }
 
 function generateId() {
   return Math.random().toString(36).substring(2) + (new Date()).getTime().toString(36);
 }
 
-function addClass(element, value) {
-  if (!element.className)  element.className = value;
-  else element.className += '' + value;
-}
-
 function getStyle(obj, attr) {
   return obj.currentStyle ? obj.currentStyle[attr] : getComputedStyle(obj)[attr];
-}
-
-function getElementsByClassName(element, classname) {
-  if (element.getElementsByClassName) {
-    return element.getElementsByClassName(classname);
-  } else {
-    const elements = element.getElementsByTagName('*');
-    const result = [];
-    const names = classname.split(' ');
-    for (let i = 0, el = elements.length; i < el; i++) {
-      const getname = elements[i].className;
-      let flag = true;
-      for (let j = 0, nl = names.length; j < nl; j++) {
-        if (getname.indexOf(names[j]) == -1) {
-          flag = false;
-          break;
-        }
-      }
-      if (flag) {
-        result.push(elements[i]);
-      }
-    }
-    return result;
-  }
 }
 
 function insertAfter(newElement, targetElement) {
@@ -239,8 +215,8 @@ function jsonp(obj) {
 
 
 //深拷贝
-// 方法一：JSON.parse(JSON.stringify(obj))
-function deepClone(obj) {
+// 方法一：JSON.parse(JSON.stringify(obj)) function、undefined、symbol不被拷贝，无法解决循环引用
+function deepClone(obj) { // 深度优先拷贝
   if (obj === null || typeof obj !== 'object') {
     return obj;
   }
@@ -251,24 +227,19 @@ function deepClone(obj) {
   return newobj;
 }
 
-
-
-//-------ES6 自定义事件方法
 class SubscribeEvent {
   constructor() {
     this.listeners = {}
   }
-  subscribe(type, cb) {  //unSubscribe用了Function的name,所以cb不要写成匿名函数
+  subscribe(type, cb) {  // cb: 函数名
     this.listeners[type] = this.listeners[type] || [];
-    this.listeners[type].push(cb);
-    this.listeners[type] = [...new Set(this.listeners[type])];
+    let arr = this.listeners[type];
+    this.listeners[type] = [...new Set(arr.push(cb))];
+    return () => this.listeners[type] = arr.filter(e => e.name !== cb.name) // 解绑
   }
   trigger(type) {
     if (!this.listeners[type]) return;
     this.listeners[type].forEach(e => e.call(this))
-  }
-  unSubscribe(type, cb) {
-    this.listeners[type] = this.listeners[type].filter(e => e.name !== cb.name)//利用Function的name属性
   }
 }
 
@@ -285,13 +256,20 @@ Function.prototype.myCall = function(context) {
   return result;
 }
 
+// new 的实现
+function _new(fn, ...arg) {
+  const obj = Object.create(fn.prototype);
+  const ret = fn.apply(obj, arg);
+  return ret instanceof Object ? ret : obj;
+}
+
 // 防抖
 const debounce = (func, wait = 100) => {
   let timer = 0
   return function(...args) { // arguments
     if (timer) clearTimeout(timer) // func触发频率小于100ms会被取消再新建
     timer = setTimeout(() => {
-      func.apply(this, args)
+      func.apply(this, args) // this绑定当前执行环境，指向调用对象
     }, wait)
   }
 }
@@ -307,6 +285,64 @@ const throttle = (func, wait = 50) => {
     }
   }
 }
+
+/*深度优先遍历一个DOM树三种方式*/
+let deepTraversal1 = (node, nodeList = []) => {
+  if (node !== null) {
+    nodeList.push(node)
+    let children = node.children
+    for (let i = 0; i < children.length; i++) {
+      deepTraversal1(children[i], nodeList)
+    }
+  }
+  return nodeList
+}
+let deepTraversal2 = (node) => {
+    let nodes = []
+    if (node !== null) {
+      nodes.push(node)
+      let children = node.children
+      for (let i = 0; i < children.length; i++) {
+        nodes = nodes.concat(deepTraversal2(children[i]))
+      }
+    }
+    return nodes
+  }
+// 非递归
+let deepTraversal3 = (node) => {
+  let stack = []
+  let nodes = []
+  if (node) {
+    stack.push(node)
+    while (stack.length) {
+      let item = stack.pop()
+      nodes.push(item)
+      let children = item.children
+      for (let i = children.length - 1; i >= 0; i--) {
+        stack.push(children[i])
+      }
+    }
+  }
+  return nodes
+}
+// 广度优先遍历
+let widthTraversal = (node) => {
+  let nodes = []
+  let stack = []
+  if (node) {
+    stack.push(node)
+    while (stack.length) {
+      let item = stack.shift()
+      nodes.push(item)
+      let children = item.children
+      for (let i = 0; i < children.length; i++) {
+        stack.push(children[i])
+      }
+    }
+  }
+  return nodes
+}
+
 // 优点：稳定、用于链表
 function bubbleSort(arr) {
   let len = arr.length;
