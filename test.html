@@ -8,28 +8,22 @@
   <style>
     *{height: 100%; margin: 0}
     .clearfix:after{content:'.';display:block;clear:both;height:0;visibility:hidden;}
-    .parent{
-      display: flex;
+    #container{
+      position:relative;
     }
-    .left{
-      flex-basis: 100px;
-      background: blueviolet;
-    }
-    .right{
-      flex-basis: 100px;
-      background: coral;
-    }
-    .middle{
-      flex-grow: 1;
-      background-color: bisque;
+    #center{
+      position:absolute;
+      margin:auto;
+      top:0;
+      bottom:0;
+      left:0;
+      right:0;
     }
   </style>
 </head>
 <body>
-  <div class="parent">
-    <div class="left"></div>
-    <div class="middle"></div>
-    <div class="right"></div>
+  <div id="container">
+    <div id="center">aaa</div>
   </div>
 </body>
 </html>

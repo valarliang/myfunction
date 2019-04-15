@@ -22,6 +22,16 @@ function generateId() {
   return Math.random().toString(36).substring(2) + (new Date()).getTime().toString(36);
 }
 
+// 数组去重
+// 1、new Set()
+// 2、arr.filter((i,j,arr) => arr.indexOf(i) === j)
+// 3、arr.reduce((n,i) => (n.indexOf(i) === -1 ? n.push(i) : n), [])
+// 4、双循环一一对比，用splice(j,1)剔除
+
+// 判断空对象：1、Object.keys(obj).length  2、JSON.stringify()==='{}'  3、空对象不会执行for...in...
+
+// 前端路由实现：https://juejin.im/post/5ac61da66fb9a028c71eae1b
+
 function getStyle(obj, attr) {
   return obj.currentStyle ? obj.currentStyle[attr] : getComputedStyle(obj)[attr];
 }
@@ -285,6 +295,14 @@ const throttle = (func, wait = 50) => {
     }
   }
 }
+
+// Currying
+const curry = (fn, arr = []) => (...args) => (
+  arg => arg.length === fn.length
+    ? fn(...arg)
+    : curry(fn, arg)
+)([...arr, ...args])
+
 
 /*深度优先遍历一个DOM树三种方式*/
 let deepTraversal1 = (node, nodeList = []) => {

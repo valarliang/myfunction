@@ -40,3 +40,15 @@
 _([1,2,3,4,2,3,4,'a','A']).uniq(function (val) {
   return typeof val === 'string' ? val.toLocaleLowerCase() : val;
 });
+
+const aa = {
+  a:{
+    b:{
+      c:11
+    }
+  },
+  get(id) {
+    return id.split('.').reduce((next,item) => next[item],this);
+  }
+}
+aa.get('a.b.c');
