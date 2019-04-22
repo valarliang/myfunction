@@ -1,3 +1,4 @@
+// this
 var number = 5;
 var obj = {
     number: 3,
@@ -16,6 +17,13 @@ var obj = {
     })()
 }
 var myFun = obj.fn;
-myFun.call(null);
-obj.fn();
-console.log(window.number);
+myFun.call(null); //
+obj.fn(); //
+console.log(window.number); //
+
+// 引用
+var a={n:1}
+var b=a;
+a.x=a={n:2};
+console.log(a.x) 
+console.log(b.x)

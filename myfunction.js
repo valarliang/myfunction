@@ -118,7 +118,7 @@ function add(num1, num2) {
   return (num1 * m + num2 * m) / m;
 }
 function add2(x, y) {
-  return x.toPrecision() + y.toPrecision()  //或toFixed(),返回都为字符串
+  return x.toPrecision() + y.toPrecision()  // 或toFixed(),返回都为字符串
 }
 
 function setcookie(name, value, expires, path, domain, secure) {

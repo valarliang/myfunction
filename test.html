@@ -6,24 +6,38 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Document</title>
   <style>
-    *{height: 100%; margin: 0}
-    .clearfix:after{content:'.';display:block;clear:both;height:0;visibility:hidden;}
-    #container{
-      position:relative;
-    }
-    #center{
-      position:absolute;
-      margin:auto;
-      top:0;
-      bottom:0;
-      left:0;
-      right:0;
-    }
   </style>
+<!-- <script src="https://cdn.bootcss.com/jquery/3.4.0/jquery.min.js"></script> -->
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
 </head>
 <body>
-  <div id="container">
-    <div id="center">aaa</div>
+  <div id="root">
+    <elem :content="abc"></elem>
+    <elem content="efg"></elem>
   </div>
+<script>
+  Vue.prototype.bus = new Vue();
+  
+  Vue.component('elem',{
+    props: ['content'],
+    template: '<div @click="cons">{{content}}</div',
+    methods: {
+      cons(){
+        this.bus.$emit('alert', this.content)
+      },
+    },
+    mounted(){
+      this.bus.$on('alert', (content) => {
+        this.content = content
+      })
+    }
+  });
+  var vm = new Vue({
+    el: '#root',
+    data: {
+      abc: 'Ben'
+    }
+  });
+</script>
 </body>
 </html>
