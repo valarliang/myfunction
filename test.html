@@ -13,11 +13,12 @@
 <body>
   <div id="root">
     <elem :content="abc"></elem>
+    <img src="https://d2eip9sf3oo6c2.cloudfront.net/series/square_covers/000/000/151/full/EGH_OptimizeUXMobile_Final.png" alt=""style='width:10%'>
     <elem content="efg"></elem>
   </div>
 <script>
   Vue.prototype.bus = new Vue();
-  
+
   Vue.component('elem',{
     props: ['content'],
     template: '<div @click="cons">{{content}}</div',

@@ -19,7 +19,17 @@ function flat (arr) {
 }
 
 function generateId() {
-  return Math.random().toString(36).substring(2) + (new Date()).getTime().toString(36);
+  return Math.random().toString(36).substring(2) + Date.now().toString(36);
+}
+
+// 创建过去七天的数组，如果将代码中的减号换成加号，你将得到未来7天的数组集合
+// [...Array(7).keys()].map(i => new Date(Date.now() - 86400000*i))
+
+// 获取URL的查询参数
+function query(){
+  const q = {};
+  location.search.replace(/([^?&=]+)=([^&]+)/g, (_, k, v) => q[k] = v)
+  return q;
 }
 
 // 数组去重
