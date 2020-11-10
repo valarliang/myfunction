@@ -17,13 +17,29 @@ var obj = {
     })()
 }
 var myFun = obj.fn;
-myFun.call(null); //
-obj.fn(); //
-console.log(window.number); //
+myFun.call(null); // 10 9
+obj.fn(); // 3 27
+console.log(window.number); // 20
 
 // 引用
-var a={n:1}
-var b=a;
-a.x=a={n:2};
-console.log(a.x) 
+var aa={n:1}
+var b=aa;
+aa.x=aa={n:2};
+console.log(aa.x)
 console.log(b.x)
+
+class foo{
+  a = 1
+  static b = 2
+  constructor() {
+    this.c = 3
+  }
+  static fa() {
+    this.c = 5
+    console.log(this.a,this.b)
+  }
+  fb() {
+    console.log(this.c, this.c)
+  }
+}
+foo.prototype.fb()
