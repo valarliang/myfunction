@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>test</title>
+  <style>
+    .link {
+      margin: 20px 10px;
+      overflow: hidden;
+      border: 1px solid coral;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <router-link class="link a" to="/">首页</router-link>
+    <router-link class="link b" to="/about">关于</router-link>
+    <router-link class="link" to="/other">其他</router-link>
+    <router-view></router-view>
+  </div>
+  <script src="https://unpkg.com/vue@next"></script>
+  <script type="module" src="main.js"></script>
+</body>
+</html>

@@ -247,19 +247,19 @@ function deepClone(obj) { // 深度优先拷贝
   return newobj;
 }
 
-class SubscribeEvent {
+class EventEmitter {
   constructor() {
-    this.listeners = {}
+    this.handlers = {}
   }
-  subscribe(type, cb) {  // cb: 函数名
-    this.listeners[type] = this.listeners[type] || [];
-    let arr = this.listeners[type];
-    this.listeners[type] = [...new Set(arr.push(cb))];
-    return () => this.listeners[type] = arr.filter(e => e.name !== cb.name) // 解绑
+  on(type, cb) {  // cb: 函数名
+    const handlers = this.handlers[type]
+    const added = handlers && handlers.push(cb)
+    if (!added) this.handlers[type] = [cb]
+    return () => this.handlers[type] = arr.filter(e => e.name !== cb.name) // 解绑
   }
-  trigger(type) {
-    if (!this.listeners[type]) return;
-    this.listeners[type].forEach(e => e.call(this))
+  emit(type, ...arg) {
+    if (this.handlers[type])
+      this.handlers[type].forEach(e => e(...arg))
   }
 }
 
@@ -432,4 +432,36 @@ function quickSort(arr) {
     arr[i] < pivot ? left.push(arr[i]) : right.push(arr[i])
   }
   return quickSort(left).concat([pivot],quickSort(right));
+}
+// node内置util.promisify实现
+function promisify(fn) {
+  return (...args) => {
+    return new Promise((resolve, reject) => {
+      args.push(function (err, ...args) {
+        if (err) reject(err)
+        else resolve(...args)
+      })
+      fn.apply(null, args)
+    })
+  }
+}
+// Promise.queue实现
+function queue(promiseFns) {
+  const len = promiseFns.length
+  const arr = Array(len)
+  let promiseFn = promiseFns[0]
+  for (let i = 0; i < len; i++) {
+    promiseFn = promiseFn.then(res => {
+      arr[i] = res
+      const next = promiseFns[i+1]
+      return next ? next : Promise.resolve(arr)
+    }, (err) => console.log(err))
+  }
+  return promiseFn
+}
+
+function queue2(fns) {
+  const arr = []
+  fns.reduce((acc, cur, i) => acc.then(res => arr.push(res) && fns[i+1]?.()), fns[0]())
+  return Promise.resolve(arr)
 }
