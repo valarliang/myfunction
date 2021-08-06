@@ -57,6 +57,7 @@ function extractComponentsGuards(records, guardType, to, from) {
       guard && guards.push(guardToPromiseFn(guard, to, from, record))
     }
   }
+  return guards
 }
 function runGuardQueue(guards) {
   return guards.reduce((acc, guard) => acc.then(() => guard()), Promise.resolve())
@@ -96,7 +97,6 @@ export function createRouter(options) {
   }
   function navigate(to, from) {
     const [leavingRecords, updateRecords, enteringRecords] = extractChangeRecords(to, from) // 收集相关组件
-    console.log(leavingRecords)
     let guards = extractComponentsGuards(leavingRecords.reverse(), 'beforeRouteLeave', to, from) // 收集离开组件的守卫
     return runGuardQueue(guards).then(() => {
       // 执行beforEatch守卫
@@ -104,7 +104,7 @@ export function createRouter(options) {
       return runGuardQueue(guards)
     }).then(() => {
       // 收集和执行更新组件的守卫，
-      gurds = extractComponentsGuards(updateRecords, 'beforeRouteUpdate', to, from)
+      guards = extractComponentsGuards(updateRecords, 'beforeRouteUpdate', to, from)
       return runGuardQueue(guards)
     }).then(() => {
       // 收集和执行路由配置的beforEnter守卫
@@ -115,7 +115,7 @@ export function createRouter(options) {
       return runGuardQueue(guards)
     }).then(() => {
       // 收集和执行进入的组件的守卫
-      gurds = extractComponentsGuards(enteringRecords, 'beforeRouteEnter', to, from)
+      guards = extractComponentsGuards(enteringRecords, 'beforeRouteEnter', to, from)
       return runGuardQueue(guards)
     }).then(() => {
       // 执行beforeResolve守卫
@@ -172,7 +172,6 @@ export function createRouter(options) {
       if (currentRoute.value === START_LOCATION_NORMALIZED) {
         push(routerHistory.location)
       }
-      console.log(beforeGuards.list)
     }
   }
   return router
