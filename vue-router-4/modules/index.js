@@ -89,21 +89,21 @@ export function createRouter(options) {
     })
   }
   function finalizeNavigation(to, from, replace) {
-    // 页面初始化会执行一次replace跳转以初始化路由状态
+    // 如果是页面初始化会执行replace跳转以初始化路由状态
     if (from === START_LOCATION_NORMALIZED || replace) routerHistory.replace(to.path)
     else routerHistory.push(to.path)
     currentRoute.value = to // 更新$route
     markAsReady() // 监听浏览器前进后退按钮
   }
   function navigate(to, from) {
-    const [leavingRecords, updateRecords, enteringRecords] = extractChangeRecords(to, from) // 收集相关组件
+    const [leavingRecords, updateRecords, enteringRecords] = extractChangeRecords(to, from) // 收集参与跳转的组件
     let guards = extractComponentsGuards(leavingRecords.reverse(), 'beforeRouteLeave', to, from) // 收集离开组件的守卫
     return runGuardQueue(guards).then(() => {
       // 执行beforEatch守卫
       guards = beforeGuards.list.map(guard => guardToPromiseFn(guard, to, from, guard))
       return runGuardQueue(guards)
     }).then(() => {
-      // 收集和执行更新组件的守卫，
+      // 收集和执行beforeRouteUpdate（更新组件的守卫）
       guards = extractComponentsGuards(updateRecords, 'beforeRouteUpdate', to, from)
       return runGuardQueue(guards)
     }).then(() => {
@@ -114,7 +114,7 @@ export function createRouter(options) {
       }, [])
       return runGuardQueue(guards)
     }).then(() => {
-      // 收集和执行进入的组件的守卫
+      // 收集和执行beforeRouteEnter（进入的组件的守卫）
       guards = extractComponentsGuards(enteringRecords, 'beforeRouteEnter', to, from)
       return runGuardQueue(guards)
     }).then(() => {
