@@ -284,24 +284,24 @@ function _new(fn, ...arg) {
 }
 
 // 防抖
-const debounce = (func, wait = 100) => {
+function debounce(fn, delay = 100) {
   let timer = 0
-  return function(...args) { // arguments
-    if (timer) clearTimeout(timer) // func触发频率小于100ms会被取消再新建
+  return (...args) => {
+    if (timer) clearTimeout(timer)
     timer = setTimeout(() => {
-      func.apply(this, args) // this绑定当前执行环境，指向调用对象
-    }, wait)
+      fn.apply(this, args)
+    }, delay);
   }
 }
 
-// 节流(throttle)
-const throttle = (func, wait = 50) => {
-  let lastTime = 0
-  return function(...args) {
-    let now = +new Date()
-    if (now - lastTime > wait) {
-      lastTime = now
-      func.apply(this, args)
+// 节流
+function throttle(fn, delay = 50) {
+  let last = 0
+  return (...args) => {
+    const now = Date.now()
+    if (now - last > delay) {
+      last = now
+      fn.apply(this, args)
     }
   }
 }

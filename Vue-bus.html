@@ -6,63 +6,43 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Document</title>
   <style>
+#page {
+  display: grid;
+  width: 100%;
+  height: 200px;
+  grid-template: "head head" 30px "nav  main" 1fr "nav  foot" 30px / 120px 1fr;
+}
+
+header {
+  background-color: lime;
+  grid-area: head;
+}
+
+nav {
+  background-color: lightblue;
+  grid-area: nav;
+}
+
+main {
+  background-color: yellow;
+  grid-area: main;
+}
+
+footer {
+  background-color: red;
+  grid-column: foot;
+}
   </style>
-<!-- <script src="https://cdn.bootcss.com/jquery/3.4.0/jquery.min.js"></script> -->
-<script src="https://cdn.jsdelivr.net/npm/vue"></script>
 </head>
 <body>
-  <div id="root">
-    {{`${c.a} ${c.b}`}}
-    <!-- <elem :content="a"></elem> -->
-    <!-- <img src="https://d2eip9sf3oo6c2.cloudfront.net/series/square_covers/000/000/151/full/EGH_OptimizeUXMobile_Final.png" alt=""style='width:10%'> -->
-    <elem :content="c"></elem>
-  </div>
+  <section id="page">
+    <header>Header</header>
+    <nav>Navigation</nav>
+    <main>Main area</main>
+    <footer>Footer</footer>
+  </section>
 <script>
-  Vue.prototype.bus = new Vue();
 
-  Vue.component('elem',{
-    props: ['content'],
-    data() {
-      return {
-        aa: {a: 1, b: 2, c: 3},
-        in: this.$root.a,
-      }
-    },
-    template: `
-      <div>
-        <input :value="a" @input="onChange" />
-        <input :value="content.b" />
-        {{in}}
-      </div>`,
-    methods: {
-      cons(){
-        this.bus.$emit('alert', this.content)
-      },
-      onChange(e) {
-        console.log(e.target)
-        this.a = e.target.value
-      }
-    },
-    mounted(){
-      console.log(this.$root.a)
-      this.bus.$on('alert', (content) => {
-        this.aa.c = content
-      })
-    }
-  });
-  var vm = new Vue({
-    el: '#root',
-    data: {
-      a: 'Ben',
-      b: 'Liang',
-      c: {}
-    },
-    mounted() {
-      setTimeout(()=>{
-        this.c = { a: 'alpha', b: 'beta' }
-      },1000)
-    }
-  });
 </script>
 </body>
 </html>
