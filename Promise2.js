@@ -24,7 +24,7 @@ function resolvePromiseWithAPlus(promise2, x, resolve, reject) {
            *         这句话的意思是：x 被执行x，如果执行的时候拿到一个y，还要继续解析y
            */
           x.then(y => {
-              resolvePromise(promise2, y, resolve, reject)
+              resolvePromiseWithAPlus(promise2, y, resolve, reject)
           }, reject);
       } else if (x.PromiseState === myPromise.FULFILLED) {
           // 2.3.2.2 如果 x 处于执行态，用相同的值执行 promise
@@ -33,10 +33,9 @@ function resolvePromiseWithAPlus(promise2, x, resolve, reject) {
           // 2.3.2.3 如果 x 处于拒绝态，用相同的据因拒绝 promise
           reject(x.PromiseResult);
       }
-  } else if (x !== null && ((typeof x === 'object' || (typeof x === 'function')))) {
-      // 2.3.3 如果 x 为对象或函数
+  } else if ((x !== null && typeof x === 'object') || typeof x === 'function') {
+      // 2.3.3 promise要有then方法
       try {
-          // 2.3.3.1 把 x.then 赋值给 then
           var then = x.then;
       } catch (e) {
           // 2.3.3.2 如果取 x.then 的值时抛出错误 e ，则以 e 为据因拒绝 promise
@@ -59,7 +58,7 @@ function resolvePromiseWithAPlus(promise2, x, resolve, reject) {
                   y => {
                       if (called) return;
                       called = true;
-                      resolvePromise(promise2, y, resolve, reject);
+                      resolvePromiseWithAPlus(promise2, y, resolve, reject);
                   },
                   // 2.3.3.3.2 如果 rejectPromise 以据因 r 为参数被调用，则以据因 r 拒绝 promise
                   r => {
@@ -92,7 +91,7 @@ function resolvePromiseWithAPlus(promise2, x, resolve, reject) {
 }
 function resolvePromise(x,resolve,reject) {
   try {
-    x instanceof sketchyPromise
+    x instanceof Promise
     ? x.then(y => resolvePromise(y,resolve,reject), reject) // 可能resolve的值还是Promise，要递归
     : resolve(x)
   } catch (err) {
@@ -100,14 +99,14 @@ function resolvePromise(x,resolve,reject) {
   }
 }
 
-class sketchyPromise {
+class Promise {
   constructor(executor) {
     this.result = undefined
     this.status = PENDING
     this.onResolvedCallbacks = []
     this.onRejectedCallbacks = []
     const resolve = value => {
-      if (value instanceof sketchyPromise) { // 处理resolve值为Promise的情况
+      if (value instanceof Promise) { // 处理resolve值为Promise的情况
         return value.then(resolve, reject)
       }
       if (this.status == PENDING) {
@@ -130,11 +129,12 @@ class sketchyPromise {
     }
   }
   then(onFulfilled, onRejected) {
+    // 处理无参数情况
     onFulfilled = typeof onFulfilled == 'function' ? onFulfilled : data => data
     onRejected = typeof onRejected == 'function' ? onRejected : error => {throw error}
-    return new sketchyPromise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       if (this.status == FULFILLED) {
-        setTimeout(() => { // Promise要异步执行，以下同理
+        setTimeout(() => { // Promise要异步执行，可以使用 MutationObserver模拟微任务
           try {
             const x = onFulfilled(this.result)
             resolvePromise(x,resolve,reject) // resolvePromise函数：处理then回调函数返回值为Promise的情况(此处不考虑返回自己导致死循环的情况，所以没有传参自己)
@@ -182,23 +182,23 @@ class sketchyPromise {
   }
   finally(cb) {
     return this.then(y => {
-      return sketchyPromise.resolve(cb()).then(() => y) // 处理finally返回Promise的情况
+      return Promise.resolve(cb()).then(() => y) // 处理finally返回Promise的情况
     },r => {
-      return sketchyPromise.resolve(cb()).then(() => {throw r})
+      return Promise.resolve(cb()).then(() => {throw r})
     })
   }
   static resolve(value) {
-    return new sketchyPromise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       resolve(value)
     })
   }
   static reject(reason) {
-    return new sketchyPromise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       reject(reason)
     })
   }
   static all(arr) {
-    return new sketchyPromise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       const ret = []
       let index = 0 // 异步元素执行完成计数
       function process(key, value) {
@@ -207,38 +207,54 @@ class sketchyPromise {
       }
 
       for (let i = 0; i < arr.length; i++) {
-        const item = arr[i]
-        item instanceof sketchyPromise ? item.then(res => process(i, res), reject) : process(i, item)
+        Promise.resolve(arr[i]).then(res => process(i, res), reject)
+      }
+    })
+  }
+  static allSettled(arr) {
+    return new Promise((resolve, reject) => {
+      const ret = []
+      let index = 0 // 异步元素执行完成计数
+      function process(key, value) {
+        ret[key] = value
+        if (++index == arr.length) resolve(ret)
+      }
+
+      for (let i = 0; i < arr.length; i++) {
+        Promise.resolve(arr[i]).then(
+          value => process(i, { status: 'fulfilled', value}),
+          reason => process(i, { status: 'rejected', reason})
+        )
       }
     })
   }
   static race(arr) {
-    return new sketchyPromise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       for (let i = 0; i < arr.length; i++) {
-        sketchyPromise.resolve(arr[i]).then(resolve,reject)
+        Promise.resolve(arr[i]).then(resolve,reject)
       }
     })
   }
 }
 
 // 测试
-let p1 = new sketchyPromise((resolve,reject) => {
+let p1 = new Promise((resolve,reject) => {
   setTimeout(() => {
-    resolve(new sketchyPromise((res,rej) => {
+    resolve(new Promise((res,rej) => {
       res('p1')
     }))
   },1000);
 })
-let p2 = new sketchyPromise((resolve,reject) => {
+let p2 = new Promise((resolve,reject) => {
   setTimeout(() => {
     resolve('p2')
   },500);
 })
 p1.then(res => {
   console.log('then1',res)
-  return new sketchyPromise((resolve,reject) => {
+  return new Promise((resolve,reject) => {
     setTimeout(() => {
-      resolve(new sketchyPromise((res,rej) => {
+      resolve(new Promise((res,rej) => {
         rej(321)
       }))
     }, 2000);
