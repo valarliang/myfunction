@@ -1,2 +1,2 @@
-import { a, b, c } from './add.js'
-console.log(a,b)
+import { a, b, c, add } from './add.js'
+console.log(a, add(a,c))

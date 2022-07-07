@@ -3,41 +3,10 @@ const path = require('path');
 const acorn = require('acorn');
 const MagicString = require('magic-string');
 
-class Bundle {
-  constructor(entry) {
-    this.entry = entry
-    this.modules = {}
-  }
-  build(output) {
-    const entryModule = this.fetchModule(this.entry)
-    this.statements = entryModule.expandAllStatements() // 获取所有依赖语句
-    const { code } = this.generate()
-    fs.writeFileSync(output, code, 'utf8')
-  }
-  fetchModule(entry) {
-    if (entry) {
-      const code = fs.readFileSync(entry, 'utf8')
-      return new Module({ code, path: entry, bundle: this })
-    }
-  }
-  generate() {
-    const bundle = new MagicString.Bundle()
-    this.statements.forEach(statement => {
-      const source = statement._source
-      if (statement.type === 'ExportNamedDeclaration') {
-        source.remove(statement.start, statement.declaration.start) // 去掉依赖语句的 export
-      }
-      bundle.addSource({ content: source, separator: '\n' }) // 拼接源码
-    })
-    return { code: bundle.toString() }
-  }
-}
-
 class Module {
-  constructor({ code, path, bundle }) {
+  constructor({ code, path }) {
     this.code = new MagicString(code, { filname: path })
     this.path = path
-    this.bundle = bundle
     this.ast = acorn.parse(code, { ecmaVersion: 7, sourceType: 'module' })
     this.analyse()
   }
@@ -55,14 +24,15 @@ class Module {
         })
       } else if (statement.type === 'ExportNamedDeclaration') { // 收集导出
         const declaration = statement.declaration
-        if (declaration.type === 'VariableDeclaration') {
-          declaration.declarations.forEach(declarator => {
-            const name = declarator.id.name
-            this.exports[name] = {statement, localName: name, expression: declaration}
-          })
+        let name
+        if (declaration.type === 'VariableDeclaration') { // 是变量还是函数
+          name = declaration.declarations[0].id.name;
+        } else {
+          name = declaration.id.name;
         }
+        this.exports[name] = {localName: name, expression: declaration}
       }
-    });
+    })
     // 分析当前模块用到的变量，是自己声明的还是导入的
     let scope = new Scope() // 当前模块的作用域
     this.definitions = {} // 存放模块作用域中所有全局声明的变量
@@ -135,7 +105,7 @@ class Module {
   }
   expandStatement(statement) {
     const result = []
-    // 递归收集所有依赖语句
+    // 递归收集所有依赖变量
     Object.keys(statement._depends).forEach(name => {
       result.push(...this.define(name))
     })
@@ -150,9 +120,9 @@ class Module {
       const importData = this.imports[name] // {name, localName, sourcePath}
       const p = importData.sourcePath
       // 读取依赖文件
-      const module = this.bundle.fetchModule(path.isAbsolute(p) ? p : path.resolve(path.dirname(this.path), p))
+      const module = fetchModule(path.isAbsolute(p) ? p : path.resolve(path.dirname(this.path), p))
       const exportData = module.exports[importData.name] // {statement, localName: name, expression: declaration}
-      return module.define(exportData.localName) // 递归获取依赖的定义语句
+      return module.define(exportData.localName) // 递归获取依赖的变量
     } else {
       const statement = this.definitions[name]
       // 依赖语句没有被收集则递归收集所有依赖语句
@@ -180,6 +150,28 @@ class Scope {
     return null
   }
 }
+
+rollup('test/main.js', 'dist/bundle.js')
+
+function rollup(entry, output) {
+  const entryModule = fetchModule(entry)
+  const statements = entryModule.expandAllStatements() // 获取所有依赖语句
+  const bundle = new MagicString.Bundle()
+  statements.forEach(statement => {
+    const source = statement._source
+    if (statement.type === 'ExportNamedDeclaration') {
+      source.remove(statement.start, statement.declaration.start) // 去掉依赖语句的 export
+    }
+    bundle.addSource({ content: source, separator: '\n' }) // 拼接源码
+  })
+  const code = bundle.toString()
+  fs.writeFileSync(output, code, 'utf8')
+}
+
+function fetchModule(entry) {
+  const code = fs.readFileSync(entry, 'utf8')
+  return new Module({ code, path: entry })
+}
 // 语句对象递归访问器
 function walk(ast, { enter, leave }) {
   visit(ast, null, enter, leave);
@@ -199,9 +191,3 @@ function visit(node, parent, enter, leave) {
   })
   if (leave) leave(node, parent)
 }
-
-function rollup(entry, output) {
-  const bundle = new Bundle(path.resolve(__dirname, entry))
-  bundle.build(output)
-}
-rollup('test/main.js', 'dist/bundle.js')
