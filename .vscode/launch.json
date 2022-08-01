@@ -8,7 +8,8 @@
       "type": "node",
       "name": "Debug (Launch) - Current File",
       "request": "launch",
-      "mainClass": "${file}"
+      "name": "Launch Program",
+      "program": "${file}"
     }
   ]
 }
