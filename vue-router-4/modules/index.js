@@ -10,7 +10,7 @@ const START_LOCATION_NORMALIZED = {
   // query: {},
   // hash: '',
   // fullPath: '/',
-  matched: [],
+  matched: [], // 当前匹配的记录
   // meta: {},
   // redirectedFrom: undefined,
 }
@@ -65,35 +65,60 @@ function runGuardQueue(guards) {
 
 // router插件初始化
 export function createRouter(options) {
-  const routerHistory = options.history; // 维护浏览器history状态、事件监听等
-  const matcher = createRouterMatcher(options.routes) // 格式化路由配置，构建路由父子关系/将输入的嵌套路由树平铺
-  const currentRoute = Vue.shallowRef(START_LOCATION_NORMALIZED) // 只跟踪currentRoute.value的修改
+  const routerHistory = options.history; // 维护路由状态、监听前进后退
+  const matcher = createRouterMatcher(options.routes) // 格式化路由配置，构建路由父子关系（将输入的嵌套路由树平铺）
+  // shallowRef 不会将值转为代理对象（使用原值，所以可以使用解构并且只跟踪 currentRoute.value 的修改，后续通过修改 value 更新视图）
+  const currentRoute = Vue.shallowRef(START_LOCATION_NORMALIZED)
 
   const beforeGuards = useCallback();
   const beforeResolveGuards = useCallback();
   const afterGuards = useCallback();
 
+  function push(to) {
+    return pushWithRedirect(to);
+  }
+  function replace(to) {
+    return push({to, replace: true})
+  }
+
+  function pushWithRedirect(to) {
+    // 跳转前
+    const targetLocation = resolve(to); // 解析得到目标 START_LOCATION_NORMALIZED
+    const from = currentRoute.value
+    const replace = to.replace === true
+    // 处理跳转导航守卫
+    navigate(targetLocation, from).then(() => {
+      return finalizeNavigation(targetLocation, from, replace) // 跳转并更新路由状态
+    }).then(() => {
+      // 执行跳转后的afterEach守卫
+      for (const guard of afterGuards.list) {
+        guard(to, from)
+      }
+    })
+  }
   function resolve(to) {
     if (typeof to === 'string') {
-      return matcher.resolve({path: to})
+      return matcher.resolve({path: to}) // 通过 matcher 的链表收集匹配的路由配置
     }
+    return matcher.resolve(to)
   }
+  function finalizeNavigation(to, from, replace) {
+    // 如果是页面初始化会执行 replace 跳转以初始化路由状态
+    if (from === START_LOCATION_NORMALIZED || replace) routerHistory.replace(to.path)
+    else routerHistory.push(to.path)
+    currentRoute.value = to // 更新 $route
+    markAsReady() // 初始化时挂载 监听浏览器前进后退的回调
+  }
+
   let ready
   function markAsReady() {
-    if (ready) return
+    if (ready) return // 只挂载一次
     ready = true
     routerHistory.listen((to) => {
       const targetLocation = resolve(to);
       const from = currentRoute.value
-      finalizeNavigation(targetLocation, from, true) // 使用replace更新浏览器前进后退之后的状态
+      finalizeNavigation(targetLocation, from, true) // 使用 replace更新浏览器前进后退之后的状态
     })
-  }
-  function finalizeNavigation(to, from, replace) {
-    // 如果是页面初始化会执行replace跳转以初始化路由状态
-    if (from === START_LOCATION_NORMALIZED || replace) routerHistory.replace(to.path)
-    else routerHistory.push(to.path)
-    currentRoute.value = to // 更新$route
-    markAsReady() // 监听浏览器前进后退按钮
   }
   function navigate(to, from) {
     const [leavingRecords, updateRecords, enteringRecords] = extractChangeRecords(to, from) // 收集参与跳转的组件
@@ -123,27 +148,6 @@ export function createRouter(options) {
       return runGuardQueue(guards)
     })
   }
-  function pushWithRedirect(to) {
-    // 跳转前
-    const targetLocation = resolve(to); // 解析得到目标START_LOCATION_NORMALIZED
-    const from = currentRoute.value
-    const replace = to.replace === true
-    // 处理跳转导航守卫
-    navigate(targetLocation, from).then(() => {
-      return finalizeNavigation(targetLocation, from, replace) // 跳转
-    }).then(() => {
-      // 执行跳转后的afterEach守卫
-      for (const guard of afterGuards.list) {
-        guard(to, from)
-      }
-    })
-  }
-  function push(to) {
-    return pushWithRedirect(to);
-  }
-  function replace(to) {
-    return push({to, replace: true})
-  }
 
   const router = {
     push,
@@ -153,22 +157,22 @@ export function createRouter(options) {
     afterEach: afterGuards.add,
     install(app) {
       const router = this
-      // 兼容vue2的$router、$route
+      // 兼容vue2的 $router、$route
       app.config.globalProperties.$router = router;
       Object.defineProperty(app.config.globalProperties, '$route', {
         get:() => Vue.unref(currentRoute)
       })
-      // vue3组合式API的router、route: useRouter(); useRoute()
+      // vue3组合式API的router、route: useRouter()、useRoute()
       const reactiveRoute = {}
       for(let key in START_LOCATION_NORMALIZED) {
         reactiveRoute[key] = Vue.computed(() => currentRoute.value[key])
       }
       app.provide('router', router)
-      app.provide('route location', Vue.reactive(reactiveRoute)) // 使用reactive可略去.value: reactiveRoute.path
+      app.provide('route location', Vue.reactive(reactiveRoute)) // 使用reactive可略去 .value: reactiveRoute.path
 
       app.component('RouterLink', RouterLink);
       app.component('RouterView', RouterView);
-      // 初始START_LOCATION_NORMALIZED默认无matched，需要push匹配
+      // 初始化时 START_LOCATION_NORMALIZED 默认无 matched，通过触发 push 匹配
       if (currentRoute.value === START_LOCATION_NORMALIZED) {
         push(routerHistory.location)
       }

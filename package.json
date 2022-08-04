@@ -6,8 +6,9 @@
   "directories": {
     "test": "test"
   },
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha test.js"
   },
   "repository": {
     "type": "git",
@@ -27,7 +28,8 @@
     "@vue/compiler-dom": "^3.2.37",
     "@vue/compiler-sfc": "^3.2.37",
     "acorn": "^8.7.1",
-    "magic-string": "^0.26.2"
+    "magic-string": "^0.26.2",
+    "mocha": "^10.0.0"
   },
   "dependencies": {
     "vue": "^3.2.36"

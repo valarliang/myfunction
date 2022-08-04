@@ -15,17 +15,16 @@ function createCurrentLocation(base = '') {
     let slicePos = hash.includes(base.slice(hashPos))
       ? base.slice(hashPos).length
       : 1
-    let pathFromHash = hash.slice(slicePos) // 去掉用户定义的base部分
-    // prepend the starting slash to hash so the url starts with /#
-    if (pathFromHash[0] !== '/') pathFromHash = '/' + pathFromHash
+    let pathFromHash = hash.slice(slicePos) // 去掉用户自定义的base和'#'，获取path
+    if (pathFromHash[0] !== '/') pathFromHash = '/' + pathFromHash // 默认为'/'
     return pathFromHash
   }
   return pathname + search + hash
 }
 
 function useHistoryStateNavigation(base = '') {
-  const currentLocation = { value: createCurrentLocation(base) }
-  const historyState = { value: window.history.state }
+  const currentLocation = { value: createCurrentLocation(base) } // 获取当前路由
+  const historyState = { value: window.history.state } // 导航状态
 
   function changeLocation(to, state, replace) {
     const url = base.indexOf('#') > -1 ? base + to : to // 跳转路径要拼base
@@ -49,7 +48,8 @@ function useHistoryStateNavigation(base = '') {
   // push方法
   function push(to, data) {
     // 跳转前状态更新
-    const currentState = Object.assign({},
+    const currentState = Object.assign(
+      {},
       historyState.value,
       { forward: to, scroll: {left: window.pageXOffset, top: window.pageYOffset} }
     );
@@ -74,12 +74,15 @@ function useHistoryStateNavigation(base = '') {
 function useHistoryListeners(base, preState, preLocation) {
   const listeners = []
   const popStateHandler = ({state}) => {
+    // 保存跳转之前的状态
     const to = createCurrentLocation(base);
     const from = preLocation.value;
     const fromState = preState.value;
+    // 更新跳转之后的状态
     preLocation.value = to;
     preState.value = state;
     const isBack = state.position - fromState.position < 0
+    // 执行用户回调
     listeners.forEach(listener => listener(to, from, {isBack}))
   }
 
@@ -90,7 +93,9 @@ function useHistoryListeners(base, preState, preLocation) {
   return { listen }
 }
 
+
 export function createWebHistory(base) {
+  // 路由状态维护
   const historyNavigation = useHistoryStateNavigation(base)
   // 监听浏览器前进后退按钮
   const historyListeners = useHistoryListeners(base, historyNavigation.state, historyNavigation.location)
@@ -104,6 +109,7 @@ export function createWebHistory(base) {
   })
   return historyRoute
 }
+
 export function createWebHashHistory(base) {
   base = location.host ? base || location.pathname + location.search : ''
   // allow the user to provide a `#` in the middle: `/base/#/app`
