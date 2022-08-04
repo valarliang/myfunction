@@ -91,9 +91,7 @@ export function createRouter(options) {
       return finalizeNavigation(targetLocation, from, replace) // 跳转并更新路由状态
     }).then(() => {
       // 执行跳转后的afterEach守卫
-      for (const guard of afterGuards.list) {
-        guard(to, from)
-      }
+      for (const guard of afterGuards.list) guard(to, from)
     })
   }
   function resolve(to) {

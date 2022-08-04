@@ -9,7 +9,7 @@ export const RouterView = {
   setup(props, {slots}) {
     const depth = Vue.inject('depth', 0) // 当前组件在嵌套路由中的下标，默认0，从上到下渲染
     const route = Vue.inject('route location')
-    // 利用 computed 建立响应，
+    // 页面跳转 matched 会更新，用 computed 动态取取值
     const matchedRoute = Vue.computed(() => route.matched[depth]) // route.matched: [Home, HomeChildren]
     Vue.provide('depth', depth + 1) // 给嵌套的children传递depth
 
