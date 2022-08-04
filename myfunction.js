@@ -35,7 +35,7 @@ function query(){
 // 数组去重
 // 1、new Set()
 // 2、arr.filter((i,j,arr) => arr.indexOf(i) === j)
-// 3、arr.reduce((n,i) => (n.indexOf(i) === -1 ? n.push(i) : n), [])
+// 3、arr.reduce((pre,i) => { n.indexOf(i) === -1 && n.push(i); return n }, [])
 // 4、双循环一一对比，用splice(j,1)剔除
 
 // 判断空对象：1、Object.keys(obj).length  2、JSON.stringify()==='{}'  3、空对象不会执行for...in...
@@ -263,25 +263,57 @@ class EventEmitter {
   }
 }
 
+function instanceof(l, r) {
+  while (l.__proto__) {
+    if (l.__proto__ === r.prototype) return true
+    l = l.__proto__
+  }
+  return false
+}
+
 //call的实现
-Function.prototype.myCall = function(context) {
+Function.prototype.myCall = function(context, ...args) {
   if (typeof this !== 'function') {
     throw new TypeError('Error');
   }
   context = context || window;
   context.fn = this;
-  const args = [...arguments].slice(1);
   const result = context.fn(...args);
   delete context.fn;
   return result;
 }
 
+function create(obj) {
+  function F() {}
+  F.prototype = obj
+  return new F()
+}
+
 // new 的实现
 function _new(fn, ...arg) {
-  const obj = Object.create(fn.prototype);
+  const obj = Object.create(fn.prototype); // 相当于 obj={}; obj.__proto__ = fn.prototype
   const ret = fn.apply(obj, arg);
   return ret instanceof Object ? ret : obj;
 }
+
+Function.prototype.myBind = function(context, ...args) {
+  if (typeof this !== 'function') {
+    throw new TypeError('Error');
+  }
+  const fToBind = this,
+    F = function () {},
+    ret = function () {
+      return fToBind.apply(
+        this instanseOf ret ? this : context, // ret被当做new的构造函数调用时，this绑定优先级最高
+        args
+      )
+    };
+  // 维护原型关系
+  if (this.prototype) F.prototype = this.prototype
+  ret.prototype = new F()
+  return ret
+}
+
 
 // 防抖
 function debounce(fn, delay = 100) {
@@ -302,6 +334,18 @@ function throttle(fn, delay = 50) {
     if (now - last > delay) {
       last = now
       fn.apply(this, args)
+    }
+  }
+}
+function throttle(fn, delay = 50) {
+  let flag = true
+  return (...args) => {
+    if (flag) {
+      flag = false
+      setTimeout(() => {
+        fn.apply(this, args)
+        flag = true
+      }, delay);
     }
   }
 }
