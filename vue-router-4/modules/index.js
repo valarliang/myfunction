@@ -24,6 +24,7 @@ function useCallback() {
 function extractChangeRecords(to, from) {
   const leavingRecords = [], updateRecords = [], enteringRecords = []
   const recordsFrom = from.matched, recordsTo = to.matched
+
   const len = Math.max(recordsFrom.length, recordsTo.length) // /home/a/b --> /home/c
   for (let i = 0; i < len; i++) {
     const recordFrom = recordsFrom[i]
@@ -51,7 +52,7 @@ function guardToPromiseFn(guard, to, from, record) {
 function extractComponentsGuards(records, guardType, to, from) {
   const guards = []
   for (const record of records) {
-    for (const name in record.components) { // Object is not iterable不能用for...of
+    for (const name in record.components) { // 通常只配置一个：default
       const rawComponent = record.components[name]
       const guard = rawComponent[guardType]
       guard && guards.push(guardToPromiseFn(guard, to, from, record))
@@ -90,7 +91,7 @@ export function createRouter(options) {
     navigate(targetLocation, from).then(() => {
       return finalizeNavigation(targetLocation, from, replace) // 跳转并更新路由状态
     }).then(() => {
-      // 执行跳转后的afterEach守卫
+      // 执行 afterEach （全局后置守卫）
       for (const guard of afterGuards.list) guard(to, from)
     })
   }
@@ -119,29 +120,31 @@ export function createRouter(options) {
     })
   }
   function navigate(to, from) {
-    const [leavingRecords, updateRecords, enteringRecords] = extractChangeRecords(to, from) // 收集参与跳转的组件
-    let guards = extractComponentsGuards(leavingRecords.reverse(), 'beforeRouteLeave', to, from) // 收集离开组件的守卫
+    // 收集参与跳转的组件（离开的组件、需要更新的组件、进入的组件）
+    const [leavingRecords, updateRecords, enteringRecords] = extractChangeRecords(to, from)
+    // 收集组件的（离开）守卫
+    let guards = extractComponentsGuards(leavingRecords.reverse(), 'beforeRouteLeave', to, from)
     return runGuardQueue(guards).then(() => {
-      // 执行beforEatch守卫
+      // 执行 beforEatch （全局前置守卫）
       guards = beforeGuards.list.map(guard => guardToPromiseFn(guard, to, from, guard))
       return runGuardQueue(guards)
     }).then(() => {
-      // 收集和执行beforeRouteUpdate（更新组件的守卫）
+      // 收集和执行 beforeRouteUpdate（更新组件的守卫）
       guards = extractComponentsGuards(updateRecords, 'beforeRouteUpdate', to, from)
       return runGuardQueue(guards)
     }).then(() => {
-      // 收集和执行路由配置的beforEnter守卫
+      // 收集和执行 beforEnter （路由配置的守卫）
       guards = to.matched.reduce((acc, record) =>{
         record.beforEnter && acc.push(guardToPromiseFn(record.beforEnter, to, from, record))
         return acc
       }, [])
       return runGuardQueue(guards)
     }).then(() => {
-      // 收集和执行beforeRouteEnter（进入的组件的守卫）
+      // 收集和执行 beforeRouteEnter（进入的组件的守卫）
       guards = extractComponentsGuards(enteringRecords, 'beforeRouteEnter', to, from)
       return runGuardQueue(guards)
     }).then(() => {
-      // 执行beforeResolve守卫
+      // 执行 beforeResolve （全局解析守卫）
       guards = beforeResolveGuards.list.map(guard => guardToPromiseFn(guard, to, from, guard))
       return runGuardQueue(guards)
     })
