@@ -66,9 +66,9 @@ function runGuardQueue(guards) {
 
 // router插件初始化
 export function createRouter(options) {
-  const routerHistory = options.history; // 维护路由状态、监听前进后退
+  const routerHistory = createWebHistory(options.history); // 维护路由状态、监听前进后退
   const matcher = createRouterMatcher(options.routes) // 格式化路由配置，构建路由父子关系（将输入的嵌套路由树平铺）
-  // shallowRef 不会将值转为代理对象（使用原值，所以可以使用解构并且只跟踪 currentRoute.value 的修改，后续通过修改 value 更新视图）
+  // shallowRef 不会将值转为代理对象（所以可以解构原值并且只跟踪 currentRoute.value 的修改，后续通过修改 value 更新视图）
   const currentRoute = Vue.shallowRef(START_LOCATION_NORMALIZED)
 
   const beforeGuards = useCallback();

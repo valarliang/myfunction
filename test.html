@@ -13,17 +13,33 @@
   </style>
 </head>
 <body>
-  <input type="text">
+  <input type="text" id="input">
   <div id="app">
     Counter
   </div>
-  <script src="test/main.js" type="module"></script>
+  <a href="http://www.baidu.com">baidu</a>
+<script src="test/main.js" type="module"></script>
 <script>
-alert(innerWidth)
-// document.addEventListener('gesturestart', function(event) {
-//   event.preventDefault();
+window.addEventListener('pageshow', (event) => {
+  // event.preventDefault()
+  console.log('pageshow', event.persisted)
+});
+window.addEventListener('load', () => {
+  console.log('load')
+})
+window.addEventListener('pagehide', (event) => {
+  // event.preventDefault()
+  console.log('pagehide', event.persisted)
+});
+// window.addEventListener('unload', () => {
+//   console.log('unload')
+// })
+// input.addEventListener("compositionupdate", e => {
+//   console.log("compositionupdate",e.target)
 // });
-// document.addEventListener('click', e => e.preventDefault())
+// input.addEventListener("compositionend", e => {
+//   console.log("compositionend",e.target)
+// });
 </script>
 </body>
 </html>
