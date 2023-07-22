@@ -66,9 +66,10 @@ function runGuardQueue(guards) {
 
 // router插件初始化
 export function createRouter(options) {
-  const routerHistory = createWebHistory(options.history); // 维护路由状态、监听前进后退
+  const routerHistory = createWebHistory(options.history); // 维护路由状态、监听前进后退按钮
   const matcher = createRouterMatcher(options.routes) // 格式化路由配置，构建路由父子关系（将输入的嵌套路由树平铺）
-  // shallowRef 不会将值转为代理对象（所以可以解构原值并且只跟踪 currentRoute.value 的修改，后续通过修改 value 更新视图）
+  // shallowRef 不会将值转为代理对象（所以可以解构原值并且只跟踪 currentRoute.value 的修改）
+  // 后续通过修改 currentRoute.value 即 mached 更新触发 RouterView 重新渲染更新视图
   const currentRoute = Vue.shallowRef(START_LOCATION_NORMALIZED)
 
   const beforeGuards = useCallback();
@@ -106,7 +107,7 @@ export function createRouter(options) {
     if (from === START_LOCATION_NORMALIZED || replace) routerHistory.replace(to.path)
     else routerHistory.push(to.path)
     currentRoute.value = to // 更新 $route
-    markAsReady() // 初始化时挂载 监听浏览器前进后退的回调
+    markAsReady() // 初始化时要挂载 监听浏览器前进后退的回调
   }
 
   let ready
@@ -169,7 +170,7 @@ export function createRouter(options) {
         reactiveRoute[key] = Vue.computed(() => currentRoute.value[key])
       }
       app.provide('router', router)
-      app.provide('route location', Vue.reactive(reactiveRoute)) // 使用reactive可略去 .value: reactiveRoute.path
+      app.provide('route location', Vue.reactive(reactiveRoute)) // 使用reactive可略去 ".value": reactiveRoute.path
 
       app.component('RouterLink', RouterLink);
       app.component('RouterView', RouterView);

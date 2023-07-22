@@ -70,7 +70,7 @@ function useHistoryStateNavigation(base = '') {
     replace
   }
 }
-// 监听浏览器前进后退
+// 监听浏览器前进后退按钮
 function useHistoryListeners(base, preState, preLocation) {
   const listeners = []
   const popStateHandler = ({state}) => {

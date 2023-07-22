@@ -6,40 +6,48 @@
   <meta name="viewport" content="width=device-width">
   <title>Document</title>
   <style>
-    html {
-      touch-action: none;
-      height: 130%;
+    #draggable {
+      width: 200px;
+      height: 20px;
+      text-align: center;
+      background: white;
+    }
+    #text {
+      margin-top: 10px;
+      height: 20px;
+      background: forestgreen;
+    }
+    #block {
+      width: 200px;
+      height: 20px;
+      background: blueviolet;
+      margin-bottom: 10px;
+      padding: 10px;
     }
   </style>
 </head>
 <body>
+  <div id="draggable" draggable="true"> This div is draggable </div>
+  <div id="text">abcdef</div>
+  <div id="block"></div>
   <input type="text" id="input">
-  <div id="app">
-    Counter
-  </div>
-  <a href="http://www.baidu.com">baidu</a>
 <script src="test/main.js" type="module"></script>
 <script>
-window.addEventListener('pageshow', (event) => {
-  // event.preventDefault()
-  console.log('pageshow', event.persisted)
-});
-window.addEventListener('load', () => {
-  console.log('load')
+draggable.addEventListener("dragstart", e => {
+  e.dataTransfer.effectAllowed = 'move'
+  e.dataTransfer.setData('URL','http://baidu.com')
+  e.dataTransfer.setData('test','aaa')
 })
-window.addEventListener('pagehide', (event) => {
-  // event.preventDefault()
-  console.log('pagehide', event.persisted)
-});
-// window.addEventListener('unload', () => {
-//   console.log('unload')
-// })
-// input.addEventListener("compositionupdate", e => {
-//   console.log("compositionupdate",e.target)
-// });
-// input.addEventListener("compositionend", e => {
-//   console.log("compositionend",e.target)
-// });
+block.addEventListener('dragenter', e => {
+  e.dataTransfer.dropEffect = 'move'
+  console.log(e.dataTransfer.types)
+  e.preventDefault()
+})
+block.addEventListener('dragover', e => e.preventDefault())
+block.addEventListener("drop", e => {
+  block.innerText = e.dataTransfer.getData('text')
+})
+new Notification('test')
 </script>
 </body>
 </html>

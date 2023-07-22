@@ -176,7 +176,7 @@ function ajax(json) {
 
   let xhr = new XMLHttpRequest;
   if (opt.method === 'get') {
-    xhr.open('get', opt.url + '?' + encodeURI(opt.data), true);
+    xhr.open('get', opt.url + '?' + encodeURIComponent(opt.data), true);
     xhr.send();
   } else if (opt.method === 'post') {
     xhr.open('post', opt.url, true);
@@ -508,4 +508,15 @@ function queue2(fns) {
   const arr = []
   fns.reduce((acc, cur, i) => acc.then(res => arr.push(res) && fns[i+1]?.()), fns[0]())
   return Promise.resolve(arr)
+}
+
+function typedArrayConcat(typedArrayConstructor, ...typedArrays) {
+  const elementNum = typedArrays.reduce((sum, i) => (sum.length || sum) + i.length)
+  const result = new typedArrayConstructor(elementNum)
+  let currentOffset = 0
+  typedArrays.map(e => {
+    result.set(e, currentOffset)
+    currentOffset += e.length
+  })
+  return result
 }
