@@ -61,7 +61,7 @@ export default function createRouterMatcher(routes) {
       matched.unshift(matcher.record) // 父组件要放子组件之前
       matcher = matcher.parent
     }
-    return {path, matched}
+    return {path, matched} // START_LOCATION_NORMALIZED 对象
   }
   
   return { resolve, addRoute }
